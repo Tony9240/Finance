@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Freelance Finances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECDE;
+    --paper-raised:#FBF8EF;
+    --ink:#22281F;
+    --ink-soft:#5B6355;
+    --ink-faint:#8C927F;
+    --line:#D8D0B8;
+    --line-soft:#E4DEC9;
+    --moss:#3F6B4A;
+    --moss-soft:#DDE7DC;
+    --brick:#9C4432;
+    --brick-soft:#F1DED7;
+    --gold:#B98A2E;
+    --navy:#29394A;
+    --radius:3px;
+  }
+  :root[data-theme="dark"]{
+    --paper:#1C2119;
+    --paper-raised:#242A20;
+    --ink:#EDE9DA;
+    --ink-soft:#B3AF9E;
+    --ink-faint:#7C7A6C;
+    --line:#3A3F32;
+    --line-soft:#31362A;
+    --moss:#7FAE8A;
+    --moss-soft:#2A362B;
+    --brick:#D98A76;
+    --brick-soft:#3A2823;
+    --gold:#D9AE5C;
+    --navy:#8AA3B8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#1C2119;
+      --paper-raised:#242A20;
+      --ink:#EDE9DA;
+      --ink-soft:#B3AF9E;
+      --ink-faint:#7C7A6C;
+      --line:#3A3F32;
+      --line-soft:#31362A;
+      --moss:#7FAE8A;
+      --moss-soft:#2A362B;
+      --brick:#D98A76;
+      --brick-soft:#3A2823;
+      --gold:#D9AE5C;
+      --navy:#8AA3B8;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 80px;}
+  .mono{font-family:'IBM Plex Mono','Courier New',monospace;font-variant-numeric:tabular-nums;}
+  .serif{font-family:'Fraunces', serif;}
+
+  /* Masthead */
+  header.mast{
+    border-bottom:2px solid var(--ink);
+    padding:28px 0 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header.mast .title{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-style:italic;
+    font-size:26px;
+    letter-spacing:0.2px;
+  }
+  header.mast .sub{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .theme-toggle{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-family:inherit;
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  .theme-toggle:hover{border-color:var(--ink-soft);}
+
+  /* Hero */
+  .hero{
+    padding:26px 0 18px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    gap:40px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .hero .figure-label{font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
+  .hero .figure{font-family:'Fraunces', serif;font-weight:500;font-size:44px;line-height:1;}
+  .hero .figure small{font-size:20px;font-weight:400;color:var(--ink-soft);}
+  .stat-strip{display:flex;gap:28px;flex-wrap:wrap;}
+  .stat-strip .stat .k{font-size:11px;color:var(--ink-soft);text-transform:none;}
+  .stat-strip .stat .v{font-family:'IBM Plex Mono';font-size:18px;margin-top:2px;}
+  .v.pos{color:var(--moss);}
+  .v.neg{color:var(--brick);}
+
+  /* Tabs */
+  nav.tabs{
+    display:flex;
+    gap:2px;
+    margin-top:22px;
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    background:none;
+    border:none;
+    font-family:'IBM Plex Sans';
+    font-size:14px;
+    color:var(--ink-soft);
+    padding:10px 16px 9px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  nav.tabs button.active{
+    color:var(--ink);
+    border-bottom:2px solid var(--moss);
+    font-weight:500;
+  }
+  nav.tabs button:hover:not(.active){color:var(--ink);}
+
+  section.panel{display:none;padding-top:26px;}
+  section.panel.active{display:block;}
+
+  h2.section-title{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:19px;
+    margin:0 0 2px;
+  }
+  p.section-hint{font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;}
+
+  /* Rows / ledger lines */
+  .row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .row:last-child{border-bottom:none;}
+  .row .name{flex:1;min-width:0;}
+  .row .name .main{font-size:14.5px;}
+  .row .name .sub{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
+  .row .amount{font-family:'IBM Plex Mono';font-size:14.5px;white-space:nowrap;}
+  .group-title{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:22px 0 4px;
+    padding-bottom:4px;
+    border-bottom:1px solid var(--ink);
+    display:flex;
+    justify-content:space-between;
+  }
+  .group-title:first-child{margin-top:0;}
+  .group-total{font-family:'IBM Plex Mono';}
+
+  /* editable fields */
+  input, select{
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:7px 8px;
+  }
+  input:focus, select:focus{outline:none;border-color:var(--moss);}
+  input.amount-edit{
+    font-family:'IBM Plex Mono';
+    width:100px;
+    text-align:right;
+    background:transparent;
+    border:1px solid transparent;
+  }
+  input.amount-edit:hover{border-color:var(--line);}
+  input.amount-edit:focus{background:var(--paper-raised);border-color:var(--moss);}
+  input.name-edit{
+    background:transparent;
+    border:1px solid transparent;
+    width:100%;
+    font-size:14.5px;
+  }
+  input.name-edit:hover{border-color:var(--line);}
+  input.name-edit:focus{background:var(--paper-raised);border-color:var(--moss);}
+
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-family:inherit;
+    font-size:12.5px;
+    padding:6px 12px;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  button.ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+  button.primary{
+    background:var(--moss);
+    border:1px solid var(--moss);
+    color:var(--paper-raised);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:500;
+    padding:8px 16px;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  button.primary:hover{opacity:0.88;}
+  button.icon-btn{
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    cursor:pointer;
+    font-size:15px;
+    padding:2px 6px;
+    line-height:1;
+  }
+  button.icon-btn:hover{color:var(--brick);}
+
+  /* Add-entry form */
+  .add-form{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:22px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:flex-end;
+  }
+  .add-form .field{display:flex;flex-direction:column;gap:4px;}
+  .add-form .field label{font-size:11px;color:var(--ink-soft);}
+  .add-form select, .add-form input{min-width:0;}
+  .add-form .f-note{flex:1;min-width:140px;}
+  .add-form .f-amt{width:110px;}
+  .add-form .f-date{width:135px;}
+  .toggle-type{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .toggle-type button{
+    background:var(--paper-raised);
+    border:none;
+    font-family:inherit;
+    font-size:13px;
+    padding:8px 12px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .toggle-type button.on.income{background:var(--moss-soft);color:var(--moss);font-weight:500;}
+  .toggle-type button.on.expense{background:var(--brick-soft);color:var(--brick);font-weight:500;}
+
+  /* Transactions list */
+  .import-box{margin-bottom:18px;}
+  .import-panel{
+    display:none;
+    margin-top:12px;
+    padding:14px 16px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+  .import-panel.open{display:block;}
+  .import-preview-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .import-preview-table th{
+    text-align:left;
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:500;
+    border-bottom:1px solid var(--ink);
+    padding:5px 8px 5px 0;
+  }
+  .import-preview-table td{
+    padding:5px 8px 5px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .import-preview-table td.amt{font-family:'IBM Plex Mono';text-align:right;}
+  .import-actions{display:flex;align-items:center;gap:12px;margin-top:12px;}
+  .import-summary{font-size:12.5px;color:var(--ink-soft);}
+  .import-error{font-size:12.5px;color:var(--brick);margin-top:8px;}
+  .txn-filter{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+  .txn-filter select{font-size:13px;}
+  .txn-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+  .txn-row .tick{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;}
+  .txn-row .tick.income{background:var(--moss);}
+  .txn-row .tick.expense{background:var(--brick);}
+  .txn-row .date{width:74px;font-size:12px;color:var(--ink-faint);flex-shrink:0;}
+  .txn-row .cat{width:130px;font-size:12.5px;color:var(--ink-soft);flex-shrink:0;}
+  .txn-row .note{flex:1;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .txn-row .amt{font-family:'IBM Plex Mono';font-size:14px;width:110px;text-align:right;flex-shrink:0;}
+  .txn-row .amt.income{color:var(--moss);}
+  .txn-row .amt.expense{color:var(--brick);}
+  .empty-note{font-size:13px;color:var(--ink-faint);padding:16px 0;text-align:center;}
+
+  /* Budget */
+  .budget-row{padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .budget-row .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;gap:10px;}
+  .budget-row .cat-name{font-size:14.5px;}
+  .budget-row .nums{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
+  .budget-row .nums b{color:var(--ink);font-weight:500;}
+  .bar-track{height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--moss);border-radius:3px;transition:width .3s ease;}
+  .bar-fill.over{background:var(--brick);}
+  .bar-fill.near{background:var(--gold);}
+  .budget-edit{display:flex;align-items:center;gap:6px;margin-top:8px;}
+  .budget-edit label{font-size:11px;color:var(--ink-soft);}
+  .budget-edit input{width:90px;}
+
+  .add-cat-row{display:flex;gap:8px;margin-top:18px;}
+  .add-cat-row input{flex:1;}
+
+  .rate-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .rate-box input{width:80px;}
+
+  footer{
+    margin-top:40px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  footer .note{font-size:11.5px;color:var(--ink-faint);}
+
+  @media (max-width:560px){
+    .hero{gap:20px;}
+    .hero .figure{font-size:34px;}
+    .txn-row .cat{display:none;}
+    .add-form{flex-direction:column;align-items:stretch;}
+    .add-form .field{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <div class="title">Ledger</div>
+      <div class="sub" id="todayLabel">—</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="ghost" id="saveBtn" style="padding:6px 14px;">Save</button>
+      <button class="theme-toggle" id="themeToggle">Toggle theme</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div>
+      <div class="figure-label">Net worth, EUR-equivalent</div>
+      <div class="figure serif" id="heroTotal">€0</div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat"><div class="k">Income this month</div><div class="v pos mono" id="statIncome">€0</div></div>
+      <div class="stat"><div class="k">Spent this month</div><div class="v neg mono" id="statExpense">€0</div></div>
+      <div class="stat"><div class="k">Net this month</div><div class="v mono" id="statNet">€0</div></div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="accounts">Accounts &amp; investments</button>
+    <button data-tab="transactions">Transactions</button>
+    <button data-tab="budget">Budget</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="panel active" id="panel-overview">
+    <h2 class="section-title">Where it sits</h2>
+    <p class="section-hint">Balances by currency, converted at the rate set in the Budget tab.</p>
+    <div id="overviewCurrencies"></div>
+
+    <div class="group-title" style="margin-top:26px;"><span>Recent activity</span></div>
+    <div id="overviewRecent"></div>
+  </section>
+
+  <!-- ACCOUNTS -->
+  <section class="panel" id="panel-accounts">
+    <h2 class="section-title">Cash</h2>
+    <p class="section-hint">Bank, broker, and physical cash balances. Click a value to edit it.</p>
+    <div id="cashList"></div>
+    <div class="add-cat-row">
+      <input type="text" id="newCashName" placeholder="Account name, e.g. Wise EUR">
+      <select id="newCashCurrency" style="width:80px;"><option>EUR</option><option>USD</option></select>
+      <input type="number" id="newCashAmount" placeholder="0.00" style="width:100px;">
+      <button class="primary" id="addCashBtn">Add</button>
+    </div>
+
+    <h2 class="section-title" style="margin-top:34px;">Investments</h2>
+    <p class="section-hint">Funds, ETFs, and individual holdings. Values in EUR.</p>
+    <div id="investList"></div>
+    <div class="add-cat-row">
+      <input type="text" id="newInvName" placeholder="Holding name">
+      <input type="number" id="newInvAmount" placeholder="Value €" style="width:100px;">
+      <input type="text" id="newInvShares" placeholder="Shares (optional)" style="width:120px;">
+      <button class="primary" id="addInvBtn">Add</button>
+    </div>
+  </section>
+
+  <!-- TRANSACTIONS -->
+  <section class="panel" id="panel-transactions">
+    <h2 class="section-title">Write it down</h2>
+    <p class="section-hint">Log income and spending as it happens.</p>
+
+    <div class="add-form">
+      <div class="field">
+        <label>Type</label>
+        <div class="toggle-type">
+          <button type="button" id="typeIncomeBtn" class="on income">Income</button>
+          <button type="button" id="typeExpenseBtn">Expense</button>
+        </div>
+      </div>
+      <div class="field f-date">
+        <label>Date</label>
+        <input type="date" id="txnDate">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="txnCategory"></select>
+      </div>
+      <div class="field f-note">
+        <label>Note</label>
+        <input type="text" id="txnNote" placeholder="e.g. Invoice — Acme Co.">
+      </div>
+      <div class="field f-amt">
+        <label>Amount</label>
+        <input type="number" id="txnAmount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="field">
+        <label>Currency</label>
+        <select id="txnCurrency" style="width:75px;"><option>EUR</option><option>USD</option></select>
+      </div>
+      <button class="primary" id="addTxnBtn">Add entry</button>
+    </div>
+
+    <div class="import-box">
+      <button class="ghost" id="toggleImport" type="button">Import from spreadsheet</button>
+      <div class="import-panel" id="importPanel">
+        <p class="section-hint" style="margin:0 0 10px;">Upload an .xlsx or .csv file — for example a tutoring-income sheet. If it has columns named date, amount, note/description, category, currency or type, they're picked up automatically. Anything missing uses the defaults below.</p>
+        <div class="add-form" style="margin-bottom:10px;">
+          <div class="field">
+            <label>File</label>
+            <input type="file" id="importFile" accept=".xlsx,.xls,.csv">
+          </div>
+          <div class="field">
+            <label>Default type</label>
+            <div class="toggle-type">
+              <button type="button" id="impTypeIncomeBtn" class="on income">Income</button>
+              <button type="button" id="impTypeExpenseBtn">Expense</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Default category</label>
+            <select id="importCategory"></select>
+          </div>
+          <div class="field">
+            <label>Default currency</label>
+            <select id="importCurrency" style="width:75px;"><option>EUR</option><option>USD</option></select>
+          </div>
+        </div>
+        <div id="importPreview"></div>
+      </div>
+    </div>
+
+    <div class="txn-filter">
+      <select id="filterMonth"></select>
+      <select id="filterType">
+        <option value="all">All entries</option>
+        <option value="income">Income only</option>
+        <option value="expense">Expenses only</option>
+      </select>
+    </div>
+    <div id="txnList"></div>
+  </section>
+
+  <!-- BUDGET -->
+  <section class="panel" id="panel-budget">
+    <h2 class="section-title">Monthly budget</h2>
+    <p class="section-hint">Set a limit per category. Spent is pulled from this month's expense entries.</p>
+    <div id="budgetList"></div>
+    <div class="add-cat-row">
+      <input type="text" id="newBudgetCat" placeholder="New category">
+      <button class="primary" id="addBudgetBtn">Add category</button>
+    </div>
+
+    <div class="rate-box">
+      <span>USD → EUR rate:</span>
+      <input type="number" id="usdRate" step="0.001" value="0.92">
+      <span>used for the net-worth total and month stats</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="note">Stored only in this browser. Nothing leaves this page.</div>
+    <button class="ghost" id="resetBtn">Reset to blank</button>
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "ledger-freelance-v1";
+
+  var DEFAULT_CATEGORIES_EXPENSE = ["Software & tools","Taxes","Rent / office","Equipment","Marketing","Health","Food","Travel","Misc"];
+  var DEFAULT_CATEGORIES_INCOME = ["Client work","Other income"];
+
+  function seedState(){
+    return {
+      usdRate: 0.92,
+      cash: [
+        {id:cid(), name:"Seb Bank", currency:"EUR", amount:339.30},
+        {id:cid(), name:"Swedbank", currency:"EUR", amount:1656.69},
+        {id:cid(), name:"Revolut", currency:"EUR", amount:851.68},
+        {id:cid(), name:"Revolut investment cash", currency:"EUR", amount:22.11},
+        {id:cid(), name:"Physical cash", currency:"EUR", amount:1810},
+        {id:cid(), name:"Physical cash", currency:"USD", amount:104}
+      ],
+      investments: [
+        {id:cid(), name:"Access Asien", amount:285.66, shares:"20.7207"},
+        {id:cid(), name:"Access Edge Europe", amount:196.45, shares:"11.3634"},
+        {id:cid(), name:"Access Edge Global", amount:641.62, shares:"34.3197"},
+        {id:cid(), name:"Access Edge USA", amount:437.68, shares:"22.4224"},
+        {id:cid(), name:"Global High Dividend", amount:465.51, shares:"25.0496"},
+        {id:cid(), name:"Technology (Swedbank Robur)", amount:920.69, shares:"35.2141"},
+        {id:cid(), name:"Robo advisor", amount:797.12, shares:""},
+        {id:cid(), name:"Seagate Technology", amount:67.79, shares:"0.0971"},
+        {id:cid(), name:"Oracle", amount:92.40, shares:"0.7067"},
+        {id:cid(), name:"Palantir", amount:303.94, shares:"1.9951"},
+        {id:cid(), name:"Flextronics International", amount:316.55, shares:"3.3192"},
+        {id:cid(), name:"Nvidia", amount:378.15, shares:"1.9829"},
+        {id:cid(), name:"Taiwan Semiconductor", amount:762.81, shares:"2.0409"},
+        {id:cid(), name:"VCWE", amount:1010.59, shares:"6.0147"},
+        {id:cid(), name:"LSMC Semiconductor", amount:1254.12, shares:"11.2317"},
+        {id:cid(), name:"VUAA S&P 500", amount:1519.23, shares:"11.7624"}
+      ],
+      transactions: [],
+      budgets: (function(){
+        var b = {};
+        DEFAULT_CATEGORIES_EXPENSE.forEach(function(c){ b[c] = 0; });
+        return b;
+      })(),
+      categoriesIncome: DEFAULT_CATEGORIES_INCOME.slice(),
+      categoriesExpense: DEFAULT_CATEGORIES_EXPENSE.slice()
+    };
+  }
+
+  function blankState(){
+    return {
+      usdRate: 0.92,
+      cash: [],
+      investments: [],
+      transactions: [],
+      budgets: {},
+      categoriesIncome: DEFAULT_CATEGORIES_INCOME.slice(),
+      categoriesExpense: DEFAULT_CATEGORIES_EXPENSE.slice()
+    };
+  }
+
+  function cid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+
+  var state = null;
+  var storageOK = true;
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        state = JSON.parse(raw);
+        if(!state.categoriesIncome) state.categoriesIncome = DEFAULT_CATEGORIES_INCOME.slice();
+        if(!state.categoriesExpense) state.categoriesExpense = DEFAULT_CATEGORIES_EXPENSE.slice();
+        if(typeof state.usdRate !== "number") state.usdRate = 0.92;
+        return;
+      }
+    }catch(e){ storageOK = false; }
+    state = seedState();
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){ storageOK = false; }
+  }
+
+  function fmt(n, cur){
+    cur = cur || "EUR";
+    var sym = cur === "USD" ? "$" : "€";
+    var neg = n < 0;
+    var v = Math.abs(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    return (neg ? "−" : "") + sym + v;
+  }
+
+  function toEUR(amount, currency){
+    if(currency === "USD") return amount * state.usdRate;
+    return amount;
+  }
+
+  // ---------- Tabs ----------
+  var tabButtons = document.querySelectorAll("nav.tabs button");
+  tabButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll("section.panel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---------- Theme ----------
+  var themeBtn = document.getElementById("themeToggle");
+  themeBtn.addEventListener("click", function(){
+    var root = document.documentElement;
+    var current = root.getAttribute("data-theme");
+    if(current === "dark"){ root.setAttribute("data-theme","light"); }
+    else if(current === "light"){ root.removeAttribute("data-theme"); }
+    else { root.setAttribute("data-theme","dark"); }
+  });
+
+  // ---------- Header date ----------
+  document.getElementById("todayLabel").textContent = new Date().toLocaleDateString(undefined, {weekday:"long", year:"numeric", month:"long", day:"numeric"});
+
+  // ---------- Render: Hero ----------
+  function renderHero(){
+    var total = 0;
+    state.cash.forEach(function(a){ total += toEUR(a.amount, a.currency); });
+    state.investments.forEach(function(a){ total += a.amount; });
+    document.getElementById("heroTotal").innerHTML = fmt(total, "EUR");
+
+    var now = new Date();
+    var ym = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+    var income = 0, expense = 0;
+    state.transactions.forEach(function(t){
+      if(t.date && t.date.slice(0,7) === ym){
+        var eur = toEUR(t.amount, t.currency);
+        if(t.type === "income") income += eur; else expense += eur;
+      }
+    });
+    document.getElementById("statIncome").textContent = fmt(income);
+    document.getElementById("statExpense").textContent = fmt(expense);
+    var net = income - expense;
+    var netEl = document.getElementById("statNet");
+    netEl.textContent = (net < 0 ? "−" : "") + fmt(Math.abs(net));
+    netEl.className = "v mono " + (net >= 0 ? "pos" : "neg");
+  }
+
+  // ---------- Render: Overview ----------
+  function renderOverview(){
+    var eurCash = 0, usdCash = 0, invTotal = 0;
+    state.cash.forEach(function(a){
+      if(a.currency === "USD") usdCash += a.amount; else eurCash += a.amount;
+    });
+    state.investments.forEach(function(a){ invTotal += a.amount; });
+
+    var el = document.getElementById("overviewCurrencies");
+    el.innerHTML = "";
+
+    function groupRow(label, totalStr){
+      var d = document.createElement("div");
+      d.className = "group-title";
+      d.innerHTML = "<span>" + label + "</span><span class='group-total'>" + totalStr + "</span>";
+      return d;
+    }
+
+    el.appendChild(groupRow("Cash — EUR", fmt(eurCash, "EUR")));
+    if(usdCash > 0){
+      var r = document.createElement("div");
+      r.className = "row";
+      r.innerHTML = "<div class='name'><div class='main'>Cash — USD</div><div class='sub'>≈ " + fmt(usdCash * state.usdRate, "EUR") + " at " + state.usdRate + "</div></div><div class='amount'>" + fmt(usdCash,"USD") + "</div>";
+      el.appendChild(r);
+    }
+    el.appendChild(groupRow("Investments", fmt(invTotal, "EUR")));
+    var r2 = document.createElement("div");
+    r2.className = "row";
+    r2.innerHTML = "<div class='name'><div class='main'>" + state.investments.length + " holdings across funds, ETFs, and equities</div></div>";
+    el.appendChild(r2);
+
+    var recentEl = document.getElementById("overviewRecent");
+    recentEl.innerHTML = "";
+    var recent = state.transactions.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); }).slice(0,6);
+    if(recent.length === 0){
+      recentEl.innerHTML = "<div class='empty-note'>No entries yet — add one from the Transactions tab.</div>";
+    } else {
+      recent.forEach(function(t){
+        var row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = "<div class='name'><div class='main'>" + escapeHtml(t.note || t.category) + "</div><div class='sub'>" + t.category + " · " + t.date + "</div></div>" +
+          "<div class='amount' style='color:" + (t.type === "income" ? "var(--moss)" : "var(--brick)") + "'>" + (t.type === "income" ? "+" : "−") + fmt(t.amount, t.currency) + "</div>";
+        recentEl.appendChild(row);
+      });
+    }
+  }
+
+  // ---------- Render: Accounts ----------
+  function renderAccounts(){
+    var cashEl = document.getElementById("cashList");
+    cashEl.innerHTML = "";
+    state.cash.forEach(function(a){
+      var row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        "<div class='name'><input class='name-edit' data-id='" + a.id + "' data-kind='cash' data-field='name' value='" + escapeAttr(a.name) + "'></div>" +
+        "<div class='sub' style='width:42px;color:var(--ink-faint);font-size:12px;'>" + a.currency + "</div>" +
+        "<input class='amount-edit' data-id='" + a.id + "' data-kind='cash' data-field='amount' type='number' step='0.01' value='" + a.amount + "'>" +
+        "<button class='icon-btn' data-id='" + a.id + "' data-kind='cash' title='Remove'>✕</button>";
+      cashEl.appendChild(row);
+    });
+
+    var invEl = document.getElementById("investList");
+    invEl.innerHTML = "";
+    state.investments.forEach(function(a){
+      var row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        "<div class='name'><input class='name-edit' data-id='" + a.id + "' data-kind='inv' data-field='name' value='" + escapeAttr(a.name) + "'>" +
+        "<div class='sub'>" + (a.shares ? a.shares + " shares" : "") + "</div></div>" +
+        "<input class='amount-edit' data-id='" + a.id + "' data-kind='inv' data-field='amount' type='number' step='0.01' value='" + a.amount + "'>" +
+        "<button class='icon-btn' data-id='" + a.id + "' data-kind='inv' title='Remove'>✕</button>";
+      invEl.appendChild(row);
+    });
+
+    bindEditableFields();
+    bindRemoveButtons();
+  }
+
+  function bindEditableFields(){
+    document.querySelectorAll(".amount-edit").forEach(function(inp){
+      inp.onchange = function(){
+        var id = inp.dataset.id, kind = inp.dataset.kind, field = inp.dataset.field;
+        var list = kind === "cash" ? state.cash : state.investments;
+        var item = list.find(function(x){ return x.id === id; });
+        if(item){ item[field] = parseFloat(inp.value) || 0; save(); renderHero(); renderOverview(); }
+      };
+    });
+    document.querySelectorAll(".name-edit").forEach(function(inp){
+      inp.onchange = function(){
+        var id = inp.dataset.id, kind = inp.dataset.kind, field = inp.dataset.field;
+        var list = kind === "cash" ? state.cash : state.investments;
+        var item = list.find(function(x){ return x.id === id; });
+        if(item){ item[field] = inp.value; save(); }
+      };
+    });
+  }
+
+  function bindRemoveButtons(){
+    document.querySelectorAll("button.icon-btn[data-kind='cash'], button.icon-btn[data-kind='inv']").forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.dataset.id, kind = btn.dataset.kind;
+        if(kind === "cash"){ state.cash = state.cash.filter(function(x){ return x.id !== id; }); }
+        else { state.investments = state.investments.filter(function(x){ return x.id !== id; }); }
+        save(); renderAccounts(); renderHero(); renderOverview();
+      };
+    });
+  }
+
+  document.getElementById("addCashBtn").addEventListener("click", function(){
+    var name = document.getElementById("newCashName").value.trim();
+    var currency = document.getElementById("newCashCurrency").value;
+    var amount = parseFloat(document.getElementById("newCashAmount").value) || 0;
+    if(!name) return;
+    state.cash.push({id:cid(), name:name, currency:currency, amount:amount});
+    document.getElementById("newCashName").value = "";
+    document.getElementById("newCashAmount").value = "";
+    save(); renderAccounts(); renderHero(); renderOverview();
+  });
+
+  document.getElementById("addInvBtn").addEventListener("click", function(){
+    var name = document.getElementById("newInvName").value.trim();
+    var amount = parseFloat(document.getElementById("newInvAmount").value) || 0;
+    var shares = document.getElementById("newInvShares").value.trim();
+    if(!name) return;
+    state.investments.push({id:cid(), name:name, amount:amount, shares:shares});
+    document.getElementById("newInvName").value = "";
+    document.getElementById("newInvAmount").value = "";
+    document.getElementById("newInvShares").value = "";
+    save(); renderAccounts(); renderHero(); renderOverview();
+  });
+
+  // ---------- Transactions ----------
+  var currentType = "income";
+  document.getElementById("typeIncomeBtn").addEventListener("click", function(){
+    currentType = "income";
+    document.getElementById("typeIncomeBtn").className = "on income";
+    document.getElementById("typeExpenseBtn").className = "";
+    populateCategorySelect();
+  });
+  document.getElementById("typeExpenseBtn").addEventListener("click", function(){
+    currentType = "expense";
+    document.getElementById("typeExpenseBtn").className = "on expense";
+    document.getElementById("typeIncomeBtn").className = "";
+    populateCategorySelect();
+  });
+
+  function populateCategorySelect(){
+    var sel = document.getElementById("txnCategory");
+    sel.innerHTML = "";
+    var cats = currentType === "income" ? state.categoriesIncome : state.categoriesExpense;
+    cats.forEach(function(c){
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+  }
+
+  document.getElementById("txnDate").valueAsDate = new Date();
+
+  document.getElementById("addTxnBtn").addEventListener("click", function(){
+    var date = document.getElementById("txnDate").value || new Date().toISOString().slice(0,10);
+    var category = document.getElementById("txnCategory").value;
+    var note = document.getElementById("txnNote").value.trim();
+    var amount = parseFloat(document.getElementById("txnAmount").value);
+    var currency = document.getElementById("txnCurrency").value;
+    if(!amount || amount <= 0){ document.getElementById("txnAmount").focus(); return; }
+    state.transactions.push({id:cid(), type:currentType, date:date, category:category, note:note, amount:amount, currency:currency});
+    document.getElementById("txnNote").value = "";
+    document.getElementById("txnAmount").value = "";
+    save();
+    renderHero(); renderOverview(); renderTransactions(); renderBudget(); populateMonthFilter();
+  });
+
+  // ---------- Explicit save ----------
+  document.getElementById("saveBtn").addEventListener("click", function(){
+    save();
+    var btn = this;
+    var original = btn.textContent;
+    btn.textContent = storageOK ? "Saved ✓" : "Not saved";
+    setTimeout(function(){ btn.textContent = original; }, 1200);
+  });
+
+  // ---------- Import from spreadsheet ----------
+  var currentImportType = "income";
+  var parsedRows = [];
+
+  document.getElementById("toggleImport").addEventListener("click", function(){
+    var panel = document.getElementById("importPanel");
+    panel.classList.toggle("open");
+    if(panel.classList.contains("open")) populateImportCategorySelect();
+  });
+
+  document.getElementById("impTypeIncomeBtn").addEventListener("click", function(){
+    currentImportType = "income";
+    document.getElementById("impTypeIncomeBtn").className = "on income";
+    document.getElementById("impTypeExpenseBtn").className = "";
+    populateImportCategorySelect();
+  });
+  document.getElementById("impTypeExpenseBtn").addEventListener("click", function(){
+    currentImportType = "expense";
+    document.getElementById("impTypeExpenseBtn").className = "on expense";
+    document.getElementById("impTypeIncomeBtn").className = "";
+    populateImportCategorySelect();
+  });
+
+  function populateImportCategorySelect(){
+    var sel = document.getElementById("importCategory");
+    sel.innerHTML = "";
+    var cats = currentImportType === "income" ? state.categoriesIncome : state.categoriesExpense;
+    cats.forEach(function(c){
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+  }
+
+  function findKey(row, patterns){
+    var keys = Object.keys(row);
+    for(var i=0;i<patterns.length;i++){
+      for(var j=0;j<keys.length;j++){
+        if(patterns[i].test(keys[j])) return keys[j];
+      }
+    }
+    return null;
+  }
+
+  function toISODate(val){
+    if(val instanceof Date && !isNaN(val)){
+      return val.getFullYear() + "-" + String(val.getMonth()+1).padStart(2,"0") + "-" + String(val.getDate()).padStart(2,"0");
+    }
+    if(typeof val === "string"){
+      var s = val.trim();
+      var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if(m) return m[1] + "-" + m[2].padStart(2,"0") + "-" + m[3].padStart(2,"0");
+      m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
+      if(m) return m[3] + "-" + m[2].padStart(2,"0") + "-" + m[1].padStart(2,"0");
+      var d = new Date(s);
+      if(!isNaN(d)) return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    }
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function parseAmount(val){
+    if(typeof val === "number") return val;
+    if(typeof val === "string"){
+      var cleaned = val.replace(/[^0-9.,-]/g,"").replace(/,(?=\d{3}\b)/g,"").replace(",", ".");
+      var n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
+    }
+    return 0;
+  }
+
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var previewEl = document.getElementById("importPreview");
+    previewEl.innerHTML = "<p class='import-summary'>Reading file…</p>";
+
+    var isCSV = /\.csv$/i.test(file.name);
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var workbook;
+        if(isCSV){
+          workbook = XLSX.read(evt.target.result, {type:"string", cellDates:true});
+        } else {
+          workbook = XLSX.read(evt.target.result, {type:"array", cellDates:true});
+        }
+        var sheetName = workbook.SheetNames[0];
+        var sheet = workbook.Sheets[sheetName];
+        var rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
+        processRows(rows);
+      }catch(err){
+        previewEl.innerHTML = "<p class='import-error'>Couldn't read that file. Make sure it's a valid .xlsx or .csv, then try again.</p>";
+      }
+    };
+    reader.onerror = function(){
+      previewEl.innerHTML = "<p class='import-error'>Couldn't read that file.</p>";
+    };
+    if(isCSV) reader.readAsText(file); else reader.readAsArrayBuffer(file);
+  });
+
+  function processRows(rows){
+    var previewEl = document.getElementById("importPreview");
+    if(!rows || rows.length === 0){
+      previewEl.innerHTML = "<p class='import-error'>No rows found in that file.</p>";
+      parsedRows = [];
+      return;
+    }
+
+    var dateKey = findKey(rows[0], [/^date$/i, /date/i]);
+    var amountKey = findKey(rows[0], [/^amount$/i, /amount|sum|total|value|price|pay/i]);
+    var noteKey = findKey(rows[0], [/^(note|description)$/i, /note|desc|memo|detail|student|client/i]);
+    var catKey = findKey(rows[0], [/^categ/i, /categ/i]);
+    var curKey = findKey(rows[0], [/^curr/i, /curr/i]);
+    var typeKey = findKey(rows[0], [/^type$/i, /type|direction/i]);
+
+    var defaultCategory = document.getElementById("importCategory").value;
+    var defaultCurrency = document.getElementById("importCurrency").value;
+
+    parsedRows = rows.map(function(row){
+      var amount = amountKey ? parseAmount(row[amountKey]) : 0;
+      var type = currentImportType;
+      if(typeKey && row[typeKey]){
+        var tv = String(row[typeKey]).toLowerCase();
+        if(tv.indexOf("expense") >= 0 || tv.indexOf("spend") >= 0 || tv.indexOf("out") >= 0) type = "expense";
+        else if(tv.indexOf("income") >= 0 || tv.indexOf("in") >= 0) type = "income";
+      } else if(amount < 0){
+        type = "expense";
+      }
+      return {
+        date: dateKey ? toISODate(row[dateKey]) : new Date().toISOString().slice(0,10),
+        note: noteKey ? String(row[noteKey]) : "",
+        category: catKey && row[catKey] ? String(row[catKey]) : defaultCategory,
+        currency: curKey && row[curKey] ? String(row[curKey]).toUpperCase().trim() : defaultCurrency,
+        amount: Math.abs(amount),
+        type: type
+      };
+    }).filter(function(r){ return r.amount > 0; });
+
+    renderImportPreview();
+  }
+
+  function renderImportPreview(){
+    var previewEl = document.getElementById("importPreview");
+    if(parsedRows.length === 0){
+      previewEl.innerHTML = "<p class='import-error'>No usable rows found — check that the file has an amount column.</p>";
+      return;
+    }
+    var rowsHtml = parsedRows.slice(0, 8).map(function(r){
+      return "<tr><td>" + r.date + "</td><td>" + escapeHtml(r.note) + "</td><td>" + escapeHtml(r.category) + "</td>" +
+        "<td class='amt' style='color:" + (r.type==="income" ? "var(--moss)" : "var(--brick)") + "'>" + (r.type==="income"?"+":"−") + fmt(r.amount, r.currency) + "</td></tr>";
+    }).join("");
+    var more = parsedRows.length > 8 ? "<p class='import-summary'>+ " + (parsedRows.length - 8) + " more row" + (parsedRows.length - 8 === 1 ? "" : "s") + "</p>" : "";
+    previewEl.innerHTML =
+      "<table class='import-preview-table'><thead><tr><th>Date</th><th>Note</th><th>Category</th><th>Amount</th></tr></thead><tbody>" + rowsHtml + "</tbody></table>" +
+      more +
+      "<div class='import-actions'><button class='primary' id='confirmImportBtn'>Import " + parsedRows.length + " entr" + (parsedRows.length===1?"y":"ies") + "</button>" +
+      "<span class='import-summary'>Added as new transactions — nothing existing is changed.</span></div>";
+
+    document.getElementById("confirmImportBtn").addEventListener("click", function(){
+      parsedRows.forEach(function(r){
+        state.transactions.push({
+          id: cid(), type: r.type, date: r.date, category: r.category,
+          note: r.note, amount: r.amount, currency: (r.currency === "USD" ? "USD" : "EUR")
+        });
+      });
+      save();
+      var count = parsedRows.length;
+      parsedRows = [];
+      document.getElementById("importFile").value = "";
+      previewEl.innerHTML = "<p class='import-summary'>Imported " + count + " entries.</p>";
+      renderHero(); renderOverview(); renderTransactions(); renderBudget(); populateMonthFilter();
+    });
+  }
+
+  function populateMonthFilter(){
+    var sel = document.getElementById("filterMonth");
+    var prev = sel.value;
+    var months = {};
+    state.transactions.forEach(function(t){ if(t.date) months[t.date.slice(0,7)] = true; });
+    var now = new Date();
+    var thisMonth = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+    months[thisMonth] = true;
+    var keys = Object.keys(months).sort().reverse();
+    sel.innerHTML = "<option value='all'>All time</option>";
+    keys.forEach(function(k){
+      var o = document.createElement("option");
+      o.value = k;
+      var d = new Date(k + "-02");
+      o.textContent = d.toLocaleDateString(undefined, {month:"long", year:"numeric"});
+      sel.appendChild(o);
+    });
+    sel.value = keys.indexOf(prev) >= 0 ? prev : thisMonth;
+  }
+
+  document.getElementById("filterMonth").addEventListener("change", renderTransactions);
+  document.getElementById("filterType").addEventListener("change", renderTransactions);
+
+  function renderTransactions(){
+    var monthFilter = document.getElementById("filterMonth").value;
+    var typeFilter = document.getElementById("filterType").value;
+    var list = state.transactions.filter(function(t){
+      if(monthFilter !== "all" && (t.date||"").slice(0,7) !== monthFilter) return false;
+      if(typeFilter !== "all" && t.type !== typeFilter) return false;
+      return true;
+    }).sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+
+    var el = document.getElementById("txnList");
+    el.innerHTML = "";
+    if(list.length === 0){
+      el.innerHTML = "<div class='empty-note'>Nothing here yet.</div>";
+      return;
+    }
+    list.forEach(function(t){
+      var row = document.createElement("div");
+      row.className = "txn-row";
+      row.innerHTML =
+        "<div class='tick " + t.type + "'></div>" +
+        "<div class='date'>" + t.date + "</div>" +
+        "<div class='cat'>" + escapeHtml(t.category) + "</div>" +
+        "<div class='note'>" + escapeHtml(t.note || t.category) + "</div>" +
+        "<div class='amt " + t.type + "'>" + (t.type === "income" ? "+" : "−") + fmt(t.amount, t.currency) + "</div>" +
+        "<button class='icon-btn' data-id='" + t.id + "' title='Delete'>✕</button>";
+      el.appendChild(row);
+    });
+    document.querySelectorAll("#txnList button.icon-btn").forEach(function(btn){
+      btn.onclick = function(){
+        state.transactions = state.transactions.filter(function(x){ return x.id !== btn.dataset.id; });
+        save();
+        renderHero(); renderOverview(); renderTransactions(); renderBudget(); populateMonthFilter();
+      };
+    });
+  }
+
+  // ---------- Budget ----------
+  function renderBudget(){
+    var now = new Date();
+    var ym = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+    var spentByCat = {};
+    state.transactions.forEach(function(t){
+      if(t.type === "expense" && t.date && t.date.slice(0,7) === ym){
+        var eur = toEUR(t.amount, t.currency);
+        spentByCat[t.category] = (spentByCat[t.category] || 0) + eur;
+      }
+    });
+
+    var el = document.getElementById("budgetList");
+    el.innerHTML = "";
+    state.categoriesExpense.forEach(function(cat){
+      var budget = state.budgets[cat] || 0;
+      var spent = spentByCat[cat] || 0;
+      var pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+      var barClass = "";
+      if(budget > 0){
+        if(spent > budget) barClass = "over";
+        else if(spent / budget > 0.85) barClass = "near";
+      }
+      var row = document.createElement("div");
+      row.className = "budget-row";
+      row.innerHTML =
+        "<div class='top'><div class='cat-name'>" + escapeHtml(cat) + "</div>" +
+        "<div class='nums'><b>" + fmt(spent) + "</b> of " + (budget > 0 ? fmt(budget) : "no limit set") + "</div></div>" +
+        "<div class='bar-track'><div class='bar-fill " + barClass + "' style='width:" + (budget > 0 ? pct : 0) + "%'></div></div>" +
+        "<div class='budget-edit'><label>Monthly limit €</label><input type='number' step='1' class='budget-input' data-cat='" + escapeAttr(cat) + "' value='" + (budget || "") + "' placeholder='0'>" +
+        "<button class='icon-btn' data-remove-cat='" + escapeAttr(cat) + "' title='Remove category'>✕</button></div>";
+      el.appendChild(row);
+    });
+
+    document.querySelectorAll(".budget-input").forEach(function(inp){
+      inp.onchange = function(){
+        state.budgets[inp.dataset.cat] = parseFloat(inp.value) || 0;
+        save(); renderBudget();
+      };
+    });
+    document.querySelectorAll("[data-remove-cat]").forEach(function(btn){
+      btn.onclick = function(){
+        var cat = btn.dataset.removeCat;
+        state.categoriesExpense = state.categoriesExpense.filter(function(c){ return c !== cat; });
+        delete state.budgets[cat];
+        save(); renderBudget(); populateCategorySelect();
+      };
+    });
+  }
+
+  document.getElementById("addBudgetBtn").addEventListener("click", function(){
+    var name = document.getElementById("newBudgetCat").value.trim();
+    if(!name) return;
+    if(state.categoriesExpense.indexOf(name) === -1){
+      state.categoriesExpense.push(name);
+      state.budgets[name] = 0;
+    }
+    document.getElementById("newBudgetCat").value = "";
+    save(); renderBudget();
+    if(currentType === "expense") populateCategorySelect();
+  });
+
+  document.getElementById("usdRate").addEventListener("change", function(){
+    var v = parseFloat(this.value);
+    state.usdRate = (v > 0) ? v : 0.92;
+    save();
+    renderHero(); renderOverview(); renderBudget();
+  });
+
+  // ---------- Reset ----------
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("Clear everything and start from a blank ledger? This can't be undone.")) return;
+    state = blankState();
+    save();
+    renderAll();
+  });
+
+  // ---------- Utilities ----------
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  function renderAll(){
+    document.getElementById("usdRate").value = state.usdRate;
+    renderHero();
+    renderOverview();
+    renderAccounts();
+    populateCategorySelect();
+    populateImportCategorySelect();
+    populateMonthFilter();
+    renderTransactions();
+    renderBudget();
+  }
+
+  load();
+  renderAll();
+
+  if(!storageOK){
+    var f = document.querySelector("footer .note");
+    f.textContent = "This browser blocked saved storage — changes won't persist after you close the tab.";
+  }
+})();
+</script>
+</body>
+</html>
